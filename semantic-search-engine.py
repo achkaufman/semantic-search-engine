@@ -1,5 +1,4 @@
 from sentence_transformers import SentenceTransformer, util
-import argparse
 import hashlib
 from typing import List, Dict
 
@@ -139,20 +138,30 @@ if __name__ == "__main__":
         {"id": "doc5", "content": "Setting up two-factor authentication for security"},
     ]
 
-    # Parse the query from the command line
-    parser = argparse.ArgumentParser(
-        description="Search the documents for the ones most similar to your query."
-    )
-    parser.add_argument("query", help="The search query string.")
-    args = parser.parse_args()
-
     # Build the search engine and index the documents
     search_engine = SemanticSearchEngine()
     search_engine.add_documents(documents)
 
-    # Return the top 3 documents, ordered by similarity score
-    results = search_engine.search(args.query, top_k=3)
+    # Interactive prompt: keep asking for queries until the user exits.
+    print("Semantic search. Type a query and press Enter.")
+    print("Press Enter on an empty line or Ctrl-C to quit.\n")
 
-    print(f"\nTop {len(results)} results for: '{args.query}'\n")
-    for rank, result in enumerate(results, start=1):
-        print(f"{rank}. {result['id']} (score: {result['score']:.4f}): {result['content']}")
+    while True:
+        try:
+            query = input("Query> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nGoodbye!")
+            break
+
+        # An empty query exits the loop.
+        if not query:
+            print("Goodbye!")
+            break
+
+        # Return the top 3 documents, ordered by similarity score.
+        results = search_engine.search(query, top_k=3)
+
+        print(f"\nTop {len(results)} results for: '{query}'\n")
+        for rank, result in enumerate(results, start=1):
+            print(f"{rank}. {result['id']} (score: {result['score']:.4f}): {result['content']}")
+        print()
