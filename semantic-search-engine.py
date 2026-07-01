@@ -32,11 +32,21 @@ class SemanticSearchEngine:
             documents: List of document dictionaries with 'id' and 'content' keys
             batch_size: Batch size for efficient embedding generation
         """
-        # TODO: Process documents in batches and store their embeddings
         # - Process documents in batches of the specified size
-        # - Generate embeddings for each batch
-        # - Store documents with their embeddings in your data structure
-        pass
+        for i in range(0, len(documents), batch_size):
+            batch = documents[i:i + batch_size]
+            # - Generate embeddings for the current batch
+            contents = [doc['content'] for doc in batch]
+            embeddings = self.model.encode(contents)
+
+            # - Store documents with their embeddings in your data structure
+            for doc, embedding in zip(batch, embeddings):
+                self.documents.append({
+                    'id': doc['id'],
+                    'content': doc['content'],
+                    'embedding': embedding
+                })
+
 
     def _get_embedding(self, text: str) -> List[float]:
         """
