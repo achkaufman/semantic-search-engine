@@ -1,5 +1,7 @@
 from sentence_transformers import SentenceTransformer, util
 import hashlib
+import json
+from pathlib import Path
 from typing import List, Dict
 
 
@@ -127,16 +129,30 @@ class SemanticSearchEngine:
         }
 
 
+def load_documents(docs_dir: str = "docs") -> List[Dict[str, str]]:
+    """
+    Load documents from a folder of JSON files.
+
+    Each JSON file is expected to contain an object with 'id' and 'content'
+    keys, matching the schema the search engine indexes.
+
+    Args:
+        docs_dir: Path to the folder containing the document JSON files.
+
+    Returns:
+        A list of document dictionaries, sorted by file name for stable order.
+    """
+    documents = []
+    for path in sorted(Path(docs_dir).glob("*.json")):
+        with open(path, encoding="utf-8") as f:
+            documents.append(json.load(f))
+    return documents
+
+
 # Command line interface
 if __name__ == "__main__":
-    # Documents to search over
-    documents = [
-        {"id": "doc1", "content": "How to reset your password in our application"},
-        {"id": "doc2", "content": "Troubleshooting login issues and account access problems"},
-        {"id": "doc3", "content": "Understanding your monthly billing statement"},
-        {"id": "doc4", "content": "How to upgrade your subscription plan"},
-        {"id": "doc5", "content": "Setting up two-factor authentication for security"},
-    ]
+    # Load the documents to search over from the docs/ folder
+    documents = load_documents()
 
     # Build the search engine and index the documents
     search_engine = SemanticSearchEngine()
