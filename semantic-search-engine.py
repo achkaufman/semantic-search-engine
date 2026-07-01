@@ -35,6 +35,7 @@ class SemanticSearchEngine:
         # - Process documents in batches of the specified size
         for i in range(0, len(documents), batch_size):
             batch = documents[i:i + batch_size]
+
             # - Generate embeddings for the current batch
             contents = [doc['content'] for doc in batch]
             embeddings = self.model.encode(contents)
@@ -58,13 +59,22 @@ class SemanticSearchEngine:
         Returns:
             The embedding vector for the text as a list
         """
-        # TODO: Implement caching for embeddings
         # - Create a hash of the input text to use as a cache key
+        cache_key = hashlib.md5(text.encode('utf-8')).hexdigest()
+
         # - Check if the embedding exists in the cache
-        # - If it does, increment cache hit counter and return cached embedding
+        if cache_key in self.embedding_cache:
+            self.cache_hits += 1
+            return self.embedding_cache[cache_key]
+
         # - If not, generate the embedding, cache it, increment cache miss counter
+        embedding = self.model.encode(text)
+        self.embedding_cache[cache_key] = embedding
+        self.cache_misses += 1
+
         # - Return the embedding
-        pass
+        return embedding
+    
 
     def search(self, query: str, top_k: int = 5) -> List[Dict[str, any]]:
         """
