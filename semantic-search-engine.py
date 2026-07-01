@@ -87,12 +87,24 @@ class SemanticSearchEngine:
         Returns:
             List of top_k documents with their similarity scores
         """
-        # TODO: Implement semantic search functionality
         # - Get embedding for the query (using cache if possible)
+        query_embedding = self._get_embedding(query)
+
         # - Calculate similarity between query and all documents
+        results = []
+        for doc in self.documents:
+            score = util.cos_sim(query_embedding, doc['embedding']).item()
+            results.append({
+                'id': doc['id'],
+                'content': doc['content'],
+                'score': float(score)
+            })
+
         # - Sort the results by similarity score in descending order
+        results.sort(key=lambda x: x['score'], reverse=True)
+        
         # - Return top_k results with their scores and document data
-        pass
+        return results[:top_k]
 
     def get_cache_stats(self) -> Dict[str, any]:
         """
