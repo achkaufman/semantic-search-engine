@@ -12,11 +12,17 @@ class SemanticSearchEngine:
         Args:
             model_name: The name of the SentenceTransformer model to use
         """
-        # TODO: Initialize the model and necessary data structures
         # - Initialize the embedding model
+        self.model = SentenceTransformer(model_name)
+
         # - Create empty data structures for document storage
+        self.documents = []
+
         # - Initialize a cache for query embeddings
-        pass
+        self.embedding_cache = {}
+        self.cache_hits = 0
+        self.cache_misses = 0
+
 
     def add_documents(self, documents: List[Dict[str, str]], batch_size: int = 32) -> None:
         """
