@@ -1,4 +1,5 @@
 {
     "id": "doc1",
-    "content": "How to reset your password in our application"
+    "title": "How to reset your password in our application",
+    "content": "If you have forgotten your password or simply want to change it, you can reset it from the sign-in screen. Select \"Forgot password?\", enter the email address associated with your account, and we will email you a secure reset link. Open the link, choose a new password, and confirm it to regain access. For your security, the reset link expires after a short period and can only be used once."
 }

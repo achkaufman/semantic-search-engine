@@ -30,21 +30,23 @@ class SemanticSearchEngine:
         Process and add documents to the search engine.
 
         Args:
-            documents: List of document dictionaries with 'id' and 'content' keys
+            documents: List of document dictionaries with 'id', 'title', and
+                'content' keys. Documents are embedded and searched by 'title'.
             batch_size: Batch size for efficient embedding generation
         """
         # - Process documents in batches of the specified size
         for i in range(0, len(documents), batch_size):
             batch = documents[i:i + batch_size]
 
-            # - Generate embeddings for the current batch
-            contents = [doc['content'] for doc in batch]
-            embeddings = self.model.encode(contents)
+            # - Generate embeddings for the current batch (based on the title)
+            titles = [doc['title'] for doc in batch]
+            embeddings = self.model.encode(titles)
 
             # - Store documents with their embeddings in your data structure
             for doc, embedding in zip(batch, embeddings):
                 self.documents.append({
                     'id': doc['id'],
+                    'title': doc['title'],
                     'content': doc['content'],
                     'embedding': embedding
                 })
@@ -97,6 +99,7 @@ class SemanticSearchEngine:
             score = util.cos_sim(query_embedding, doc['embedding']).item()
             results.append({
                 'id': doc['id'],
+                'title': doc['title'],
                 'content': doc['content'],
                 'score': float(score)
             })
@@ -174,10 +177,37 @@ if __name__ == "__main__":
             print("Goodbye!")
             break
 
-        # Return the top 3 documents, ordered by similarity score.
+        # Search the documents by title and show the top 3 matches.
         results = search_engine.search(query, top_k=3)
+
+        if not results:
+            print("\nNo matching documents found.\n")
+            continue
 
         print(f"\nTop {len(results)} results for: '{query}'\n")
         for rank, result in enumerate(results, start=1):
-            print(f"{rank}. {result['id']} (score: {result['score']:.4f}): {result['content']}")
+            print(f"{rank}. {result['title']} (score: {result['score']:.4f})")
         print()
+
+        # Let the user open one of the results to read its content.
+        try:
+            selection = input(
+                "Select a result number to read it (or press Enter to search again)> "
+            ).strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nGoodbye!")
+            break
+
+        # An empty selection goes back to a new query.
+        if not selection:
+            print()
+            continue
+
+        # Validate the selection, then print the chosen document's content.
+        if selection.isdigit() and 1 <= int(selection) <= len(results):
+            chosen = results[int(selection) - 1]
+            print(f"\n=== {chosen['title']} ===\n")
+            print(chosen['content'])
+            print()
+        else:
+            print("Invalid selection. Returning to search.\n")

@@ -1,4 +1,5 @@
 {
     "id": "doc2",
-    "content": "Troubleshooting login issues and account access problems"
+    "title": "Troubleshooting login issues and account access problems",
+    "content": "Having trouble signing in? Start by confirming that your email address and password are entered correctly and that Caps Lock is off. If you still cannot log in, reset your password or clear your browser cache and cookies before trying again. Accounts may be temporarily locked after several failed attempts, so wait a few minutes and retry. If the problem continues, contact support with the email on your account so we can investigate."
 }
