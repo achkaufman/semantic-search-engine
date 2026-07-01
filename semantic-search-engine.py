@@ -1,5 +1,5 @@
 from sentence_transformers import SentenceTransformer, util
-import time
+import argparse
 import hashlib
 from typing import List, Dict
 
@@ -128,9 +128,9 @@ class SemanticSearchEngine:
         }
 
 
-# Example usage
+# Command line interface
 if __name__ == "__main__":
-    # Sample documents
+    # Documents to search over
     documents = [
         {"id": "doc1", "content": "How to reset your password in our application"},
         {"id": "doc2", "content": "Troubleshooting login issues and account access problems"},
@@ -139,39 +139,20 @@ if __name__ == "__main__":
         {"id": "doc5", "content": "Setting up two-factor authentication for security"},
     ]
 
-    # Sample queries
-    queries = [
-        "I forgot my password",
-        "Can't log into my account",
-        "How do I understand my bill",
-        "I want to upgrade my account",
-        "password reset",
-        "I forgot my password",  # Repeated query to test caching
-    ]
+    # Parse the query from the command line
+    parser = argparse.ArgumentParser(
+        description="Search the documents for the ones most similar to your query."
+    )
+    parser.add_argument("query", help="The search query string.")
+    args = parser.parse_args()
 
-    # Initialize and use the search engine
+    # Build the search engine and index the documents
     search_engine = SemanticSearchEngine()
-
-    # Add documents
-    start_time = time.time()
     search_engine.add_documents(documents)
-    print(f"Document processing time: {time.time() - start_time:.4f}s")
 
-    # Search with each query
-    for query in queries:
-        start_time = time.time()
-        results = search_engine.search(query)
-        print(f"\nQuery: '{query}'")
-        print(f"Search time: {time.time() - start_time:.4f}s")
+    # Return the top 3 documents, ordered by similarity score
+    results = search_engine.search(args.query, top_k=3)
 
-        for result in results:
-            print(
-                f"  - {result['id']} (Score: {result['score']:.4f}): {result['content']}")
-
-    # Print cache statistics
-    print("\nCache statistics:")
-    stats = search_engine.get_cache_stats()
-    print(f"Cache hits: {stats['hits']}")
-    print(f"Cache misses: {stats['misses']}")
-    print(f"Total cache accesses: {stats['total']}")
-    print(f"Hit rate: {stats['hit_rate_percent']:.2f}%")
+    print(f"\nTop {len(results)} results for: '{args.query}'\n")
+    for rank, result in enumerate(results, start=1):
+        print(f"{rank}. {result['id']} (score: {result['score']:.4f}): {result['content']}")
