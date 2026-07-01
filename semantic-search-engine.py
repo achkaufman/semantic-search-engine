@@ -102,7 +102,7 @@ class SemanticSearchEngine:
 
         # - Sort the results by similarity score in descending order
         results.sort(key=lambda x: x['score'], reverse=True)
-        
+
         # - Return top_k results with their scores and document data
         return results[:top_k]
 
@@ -113,11 +113,19 @@ class SemanticSearchEngine:
         Returns:
             Dictionary with cache hit/miss statistics
         """
-        # TODO: Return cache statistics
         # - Calculate total cache accesses
+        total_accesses = self.cache_hits + self.cache_misses
+
         # - Calculate hit rate percentage
+        hit_rate = (self.cache_hits / total_accesses) * 100 if total_accesses > 0 else 0.0
+
         # - Return a dictionary with hits, misses, total, and hit rate
-        pass
+        return {
+            'hits': self.cache_hits,
+            'misses': self.cache_misses,
+            'total': total_accesses,
+            'hit_rate_percent': hit_rate,
+        }
 
 
 # Example usage
