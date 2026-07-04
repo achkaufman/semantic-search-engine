@@ -9,7 +9,7 @@ then larger investments that unlock scale, integrations, and new capabilities.
 
 ---
 
-## 1. Implement a bi-encoder retriever
+## 1. [DONE] Implement a bi-encoder retriever
 
 **Description:** Formalize the current dense search into an explicit bi-encoder
 retriever that encodes queries and documents independently and returns an
