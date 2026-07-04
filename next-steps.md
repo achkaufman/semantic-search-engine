@@ -1,13 +1,62 @@
 # Next Steps
 
-A roadmap of improvements for the semantic search engine, ordered from lowest to
-highest priority/complexity. Earlier items are quick, high-value foundations;
-later items are larger investments that unlock scale, integrations, and new
-capabilities.
+A roadmap of improvements for the semantic search engine. The first three items
+are retrieval-quality capabilities covered in the course, placed first so they
+can be tackled one at a time as hands-on learning experiments (build order:
+retrieve, then rerank, then fuse). The remaining items are ordered roughly from
+lowest to highest priority/complexity — quick, high-value foundations first,
+then larger investments that unlock scale, integrations, and new capabilities.
 
 ---
 
-## 1. Add automated tests
+## 1. Implement a bi-encoder retriever
+
+**Description:** Formalize the current dense search into an explicit bi-encoder
+retriever that encodes queries and documents independently and returns an
+initial candidate set by vector similarity. This is the foundation (stage one)
+of a two-stage retrieve-then-rerank pipeline.
+
+**High-level steps:**
+- Extract retrieval into a `Retriever` component that embeds docs and queries
+  with a bi-encoder (e.g. `all-MiniLM-L6-v2`).
+- Return an initial top-N candidate set (N larger than the final top-k) to leave
+  room for a downstream reranker.
+- Keep document embeddings precomputed so initial retrieval stays fast.
+
+---
+
+## 2. Add a cross-encoder reranker
+
+**Description:** After the bi-encoder retrieves candidates, use a cross-encoder
+that jointly encodes each (query, document) pair to score relevance more
+accurately, then reorder the candidates. This two-stage retrieve-then-rerank
+approach sharpens precision at the top of the results.
+
+**High-level steps:**
+- Load a cross-encoder model (e.g. `cross-encoder/ms-marco-MiniLM-L-6-v2`) via
+  `sentence-transformers`.
+- Score each retrieved (query, document) pair and sort by the cross-encoder score.
+- Retrieve top-N with the bi-encoder, rerank, and return the final top-k.
+
+---
+
+## 3. Add hybrid search with weighted fusion (BM25 + vector)
+
+**Description:** Combine lexical BM25 retrieval with dense bi-encoder retrieval,
+fusing their scores with a tunable weight so results benefit from both exact
+keyword matches and semantic similarity. The cross-encoder reranker can then run
+over the fused candidate set.
+
+**High-level steps:**
+- Add a BM25 index (e.g. `rank-bm25`) over the document text.
+- Normalize and combine BM25 and vector scores via weighted fusion (or
+  Reciprocal Rank Fusion).
+- Expose the fusion weight as a config option and feed the fused candidates into
+  the reranker.
+
+---
+
+## 4. Add automated tests
 
 **Description:** Lock in current behavior with a test suite so future changes
 don't silently break search results or the CLI flow.
@@ -19,7 +68,7 @@ don't silently break search results or the CLI flow.
 
 ---
 
-## 2. Externalize configuration and CLI options
+## 5. Externalize configuration and CLI options
 
 **Description:** Move hard-coded values (model name, `docs/` path, `top_k`) into
 configuration and command-line flags so behavior can change without editing code.
@@ -31,7 +80,7 @@ configuration and command-line flags so behavior can change without editing code
 
 ---
 
-## 3. Persist embeddings between runs
+## 6. Persist embeddings between runs
 
 **Description:** Today every startup re-embeds all documents. Caching embeddings
 to disk makes startup fast and only re-embeds new or changed documents.
@@ -43,7 +92,7 @@ to disk makes startup fast and only re-embeds new or changed documents.
 
 ---
 
-## 4. Improve relevance with full-content embeddings and chunking
+## 7. Improve relevance with full-content embeddings and chunking
 
 **Description:** Searching only on titles misses relevant body text. Embedding
 the content (split into passages for long docs) improves recall and precision.
@@ -55,20 +104,7 @@ the content (split into passages for long docs) improves recall and precision.
 
 ---
 
-## 5. Add hybrid search and re-ranking
-
-**Description:** Combine keyword (lexical) search with semantic search, then
-re-rank the top candidates with a stronger model for better accuracy on
-edge-case queries.
-
-**High-level steps:**
-- Add a lexical index (e.g. BM25 via `rank-bm25`).
-- Merge lexical and semantic scores into a single ranking.
-- Optionally re-rank the top-N with a cross-encoder model.
-
----
-
-## 6. Replace the linear scan with a vector database
+## 8. Replace the linear scan with a vector database
 
 **Description:** The current search compares the query against every document in
 a loop, which won't scale. A vector store provides fast approximate
@@ -81,7 +117,7 @@ nearest-neighbor search over millions of documents.
 
 ---
 
-## 7. Expose the engine as a web API and containerize it
+## 9. Expose the engine as a web API and containerize it
 
 **Description:** Turn the CLI into a service other apps can call over HTTP, and
 package it with Docker for consistent local and cloud deployment.
@@ -93,7 +129,7 @@ package it with Docker for consistent local and cloud deployment.
 
 ---
 
-## 8. Integrate external document sources
+## 10. Integrate external document sources
 
 **Description:** Pull documentation from real systems (a CMS, a database, cloud
 storage, or a knowledge base) instead of local JSON files, with automatic
@@ -106,7 +142,7 @@ re-indexing when content changes.
 
 ---
 
-## 9. Add observability and search-quality evaluation
+## 11. Add observability and search-quality evaluation
 
 **Description:** Measure and improve real-world search quality with logging,
 metrics, and an evaluation set, plus a feedback loop from users.
