@@ -79,16 +79,22 @@ class SemanticSearchEngine:
         return embedding
     
 
-    def search(self, query: str, top_k: int = 5) -> List[Dict[str, any]]:
+    def retrieve(self, query: str, top_n: int = 20) -> List[Dict[str, any]]:
         """
-        Search for documents most similar to the query.
+        Retrieve an initial candidate set of documents for a query.
+
+        This is the bi-encoder retrieval stage: it encodes the query, scores it
+        against every document by cosine similarity, and returns the top_n
+        highest-scoring candidates. A later stage (e.g. a reranker) can reorder
+        this candidate set before the final results are shown.
 
         Args:
             query: The search query text
-            top_k: Number of top results to return
+            top_n: Number of candidate documents to retrieve
 
         Returns:
-            List of top_k documents with their similarity scores
+            List of up to top_n candidate documents with their similarity
+            scores, ordered from most to least similar
         """
         # - Get embedding for the query (using cache if possible)
         query_embedding = self._get_embedding(query)
@@ -107,8 +113,8 @@ class SemanticSearchEngine:
         # - Sort the results by similarity score in descending order
         results.sort(key=lambda x: x['score'], reverse=True)
 
-        # - Return top_k results with their scores and document data
-        return results[:top_k]
+        # - Return the top_n candidates
+        return results[:top_n]
 
     def get_cache_stats(self) -> Dict[str, any]:
         """
@@ -161,6 +167,12 @@ if __name__ == "__main__":
     search_engine = SemanticSearchEngine()
     search_engine.add_documents(documents)
 
+    # Retrieve a larger candidate set from the bi-encoder, but only show the
+    # top few to the user. The extra candidates leave room for a future
+    # reranking stage.
+    CANDIDATE_COUNT = 5
+    TOP_K_DISPLAY = 3
+
     # Interactive prompt: keep asking for queries until the user exits.
     print("Semantic search. Type a query and press Enter.")
     print("Press Enter on an empty line or Ctrl-C to quit.\n")
@@ -177,8 +189,9 @@ if __name__ == "__main__":
             print("Goodbye!")
             break
 
-        # Search the documents by title and show the top 3 matches.
-        results = search_engine.search(query, top_k=3)
+        # Retrieve a candidate set by title, then show only the top matches.
+        candidates = search_engine.retrieve(query, top_n=CANDIDATE_COUNT)
+        results = candidates[:TOP_K_DISPLAY]
 
         if not results:
             print("\nNo matching documents found.\n")
